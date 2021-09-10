@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jenkins-demo
-  namespace: default
+  namespace: kube-ops
 spec:
   selector:
     matchLabels:
