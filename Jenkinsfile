@@ -1,9 +1,13 @@
 node('haimaxy-jnlp') {
-    stage('Clone') {
-        echo "1.Clone Stage"
-        git url: "https://github.com/jason19811229/demo.git"
-        script {
+    stage('Prepare') {
+             
+           echo "1.Prepare Stage"
+           checkout scm
+           script {
             build_tag = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+            if (env.BRANCH_NAME != 'master') {
+                build_tag = "${env.BRANCH_NAME}-${build_tag}"
+            }
         }
     }
     stage('Test') {
@@ -34,18 +38,17 @@ node('haimaxy-jnlp') {
                 ]
             ]
         )
+   
+        if (env.BRANCH_NAME == 'master') {
+            input "确认要部署线上环境吗？"
+        }
         echo "This is a deploy step to ${userInput}"
+
         sh "sed -i 's/<BUILD_TAG>/${build_tag}/' k8s.yaml"
         sh "sed -i 's/<BRANCH_NAME>/${env.BRANCH_NAME}/' k8s.yaml"
        
         sh "cat k8s.yaml"
-        if (userInput == "Dev") {
-            // deploy dev stuff
-        } else if (userInput == "QA"){
-            // deploy qa stuff
-        } else {
-            // deploy prod stuff
-        }
+        
         sh "kubectl apply -f k8s.yaml "
     }
 }
